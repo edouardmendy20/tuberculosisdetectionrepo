@@ -17,7 +17,7 @@ st.set_page_config(
 # ---------------------------------------------------------------
 # Paramètres issus de l'entraînement
 # ---------------------------------------------------------------
-MODEL_PATH = "vgg16_model_finetuned.h5"  # fichier du modèle, placé dans le dépôt GitHub à côté de app.py
+MODEL_PATH = "vgg16_model_finetuned.h5"
 
 IMG_SIZE = (150, 150)
 CLASSES = ["Normal", "Tuberculosis"]
@@ -25,8 +25,6 @@ CLASSES = ["Normal", "Tuberculosis"]
 
 # ---------------------------------------------------------------
 # Chargement du modèle
-# @st.cache_resource : le modèle est chargé une seule fois,
-# puis réutilisé à chaque interaction (sinon il serait rechargé à chaque clic)
 # ---------------------------------------------------------------
 @st.cache_resource
 def load_model():
@@ -37,13 +35,13 @@ def load_model():
 
 
 # ---------------------------------------------------------------
-# Prétraitement + prédiction (identique à la version Gradio)
+# Prétraitement + prédiction
 # ---------------------------------------------------------------
 def predict(model, image):
-    image = image.convert("RGB")                                # gris/RGBA -> 3 canaux
-    image = image.resize(IMG_SIZE, Image.NEAREST)               # même interpolation que Keras
-    image_array = np.asarray(image, dtype=np.float32) / 255.0   # même rescale
-    image_array = np.expand_dims(image_array, axis=0)           # (1, 150, 150, 3)
+    image = image.convert("RGB")
+    image = image.resize(IMG_SIZE, Image.NEAREST)
+    image_array = np.asarray(image, dtype=np.float32) / 255.0
+    image_array = np.expand_dims(image_array, axis=0)
 
     p_tb = float(model.predict(image_array, verbose=0)[0][0])
     return {CLASSES[1]: p_tb, CLASSES[0]: 1.0 - p_tb}
@@ -79,7 +77,6 @@ if uploaded_file is not None:
         with st.spinner("Analyse en cours..."):
             probas = predict(model, image)
 
-        # Classe prédite = classe avec la plus grande probabilité
         prediction = max(probas, key=probas.get)
 
         st.subheader("Résultat")
@@ -88,7 +85,6 @@ if uploaded_file is not None:
         else:
             st.success(f"**{prediction}** ({probas[prediction]:.1%})")
 
-        # Probabilités des deux classes, de la plus élevée à la plus faible
         for classe, proba in sorted(probas.items(), key=lambda x: x[1], reverse=True):
             st.write(f"{classe} : {proba:.1%}")
             st.progress(proba)
